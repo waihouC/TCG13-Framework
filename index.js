@@ -1,0 +1,38 @@
+const express = require('express')
+const hbs = require('hbs')
+const wax = require('wax-on')
+require('dotenv').config();
+
+// create express app
+let app = express();
+
+// set the view engine
+app.set('view engine', 'hbs');
+
+// set static folder (js, css files)
+app.use(express.static('public'));
+
+// set up handlebars to use wax-on
+wax.on(hbs.handlebars);
+wax.setLayoutPath('./views/layouts');
+
+// enable forms
+app.use(
+    express.urlencoded({
+      extended: false
+    })
+);
+
+const landingRoutes = require('./routes/landing')
+const productRoutes = require('./routes/products')
+
+async function main() {
+    app.use('/', landingRoutes);
+    app.use('/products', productRoutes);
+}
+
+main();
+
+app.listen(3000, () => {
+    console.log("Server has started");
+});
