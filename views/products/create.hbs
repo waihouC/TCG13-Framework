@@ -1,0 +1,13 @@
+{{#extends "base"}}
+
+{{#block "content"}}
+<h1>Create New Product</h1> 
+<form method="POST">
+    {{!-- NOTE: triple braces --}}
+    {{{form}}}
+    <input type="submit" class="btn btn-primary my-3" />
+</form>
+
+{{/block}}
+
+{{/extends}}
