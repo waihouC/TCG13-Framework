@@ -10,6 +10,8 @@
             <th>Name</th>
             <th>Cost</th>
             <th>Description</th>
+            <th>Category</th>
+            <th>Tags</th>
             <th></th>
         </tr>
     </thead>
@@ -27,6 +29,14 @@
                 </td>
                 <td>
                     {{this.description}}
+                </td>
+                <td>
+                    {{this.category.name}} {{!-- access category function in models index.js --}}
+                </td>
+                <td>
+                    {{#each this.tags}}
+                        <span class="badge bg-primary">{{this.name}}</span>
+                    {{/each}}
                 </td>
                 <td>
                     <a class="btn btn-primary btn-sm" href="/products/{{this.id}}/update">Update</a>

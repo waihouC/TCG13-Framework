@@ -6,9 +6,31 @@ const bookshelf = require('../bookshelf')
 // first arg is name of the model
 // use singular capitalised form for table name
 const Product = bookshelf.model('Product', {
-    'tableName':'products'
+    'tableName':'products', // name of table in mysql db
+    category() {
+        return this.belongsTo('Category'); // belongsTo -> use singular of its model
+    },
+    tags() {
+        return this.belongsToMany('Tag');
+    }
+})
+
+const Category = bookshelf.model('Category', {
+    'tableName':'categories',
+    products() {
+        return this.hasMany('Product'); // hasMany -> use plural of its model
+    }
+})
+
+const Tag = bookshelf.model('Tag',{
+    tableName: 'tags',
+    products() {
+        return this.belongsToMany('Product')
+    }
 })
 
 module.exports = {
-    Product
+    Product,
+    Category,
+    Tag
 }
