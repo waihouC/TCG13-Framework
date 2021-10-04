@@ -64,4 +64,47 @@ const createProductForm = function(categories, tags) {
     });
 }
 
-module.exports = { createProductForm, bootstrapField };
+const createRegistrationForm = () => {
+    return forms.create({
+        'username': fields.string({
+            'required': true,
+            'errorAfterField': true
+        }),
+        'email': fields.string({
+            'required': true,
+            'errorAfterField': true
+        }),
+        'password': fields.string({
+            'required': true,
+            'errorAfterField': true,
+            'widget': widgets.password()
+        }),
+        'confirm_password': fields.string({
+            'required': true,
+            'errorAfterField': true,
+            'widget': widgets.password(),
+            'validators': [ validators.matchField('password') ]
+        })
+    })
+}
+
+const createLoginForm = () => {
+    return forms.create({
+        'email': fields.string({
+            'required': true,
+            'errorAfterField': true
+        }),
+        'password': fields.string({
+            'required': true,
+            'errorAfterField': true,
+            'widget': widgets.password()
+        })
+    })
+}
+
+module.exports = { 
+    createProductForm,
+    createRegistrationForm,
+    createLoginForm,
+    bootstrapField
+};

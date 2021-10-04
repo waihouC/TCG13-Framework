@@ -85,6 +85,11 @@ router.post('/create', async function(req, res) {
                 await newProduct.tags().attach(form.data.tags.split(','));
             }
 
+            // add flash message to indicate adding product is successful
+            // 1st arg: key to add to
+            // 2nd arg: message to display
+            req.flash("success_messages", "New product created.");
+            
             res.redirect('/products');
         },
         "empty": function() {
