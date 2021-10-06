@@ -1,5 +1,13 @@
 const express = require('express');
 const router = express.Router();
+const crypto = require('crypto');
+
+const getHashedPassword = function(password) {
+    // create sha256 algo
+    const sha256 = crypto.createHash('sha256');
+    const hash = sha256.update(password).digest('base64');
+    return hash;
+}
 
 // import user model
 const { User } = require('../models');
@@ -21,8 +29,8 @@ router.post('/register', (req, res)=>{
         'success': async(form) => {
             const user = new User({
                 'username': form.data.username,
-                'password': form.data.password,
-                'email': form.data.email
+                'email': form.data.email,
+                'password': getHashedPassword(form.data.password)
             });
 
             await user.save();
@@ -60,8 +68,8 @@ router.post('/login', (req, res)=>{
                 res.redirect('/users/login');
             }
 
-            // if user exists, check if password matches
-            if (user.get('password') == form.data.password) {
+            // if user exists, check if password matches (the hashed version)
+            if (user.get('password') == getHashedPassword(form.data.password)) {
                 // if matches, store user in client session
                 req.session.user = {
                     id: user.get('id'),
@@ -87,7 +95,8 @@ router.post('/login', (req, res)=>{
     })
 })
 
-// profile page
+// profile page is protected
+// only logged in users can see profile page
 router.get('/profile', (req,res)=>{
     // once an object has been saved to session, we can retrieve it by `req.session.<key>`
     const user = req.session.user;

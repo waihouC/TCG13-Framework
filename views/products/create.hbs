@@ -5,6 +5,7 @@
 <form method="POST">
     {{!-- NOTE: triple braces --}}
     {{{form}}}
+    <input type="hidden" name="_csrf" value="{{csrfToken}}" />
     <input type="submit" class="btn btn-primary my-3" />
 </form>
 

@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();  // create a router object from express
 const { createProductForm, bootstrapField } = require('../forms');
+const { checkIfAuthenticated } = require('../middlewares');
 
 // import Product, Category, Tag models from models/index.js
 const { Product, Category, Tag } = require('../models');
@@ -28,7 +29,7 @@ router.get('/', async function(req, res) {
     });
 })
 
-router.get('/create', async function(req, res) {
+router.get('/create', checkIfAuthenticated, async function(req, res) {
     // retrieve array of all categories
     // map to customise the array
     const allCategories = await Category.fetchAll().map(function(category) {
@@ -44,11 +45,14 @@ router.get('/create', async function(req, res) {
     const productForm = createProductForm(allCategories, allTags);
 
     res.render('products/create', {
-        'form': productForm.toHTML(bootstrapField)
+        'form': productForm.toHTML(bootstrapField),
+        cloudinaryName: process.env.CLOUDINARY_NAME,
+        cloudinaryApiKey: process.env.CLOUDINARY_API_KEY,
+        cloudinaryPreset: process.env.CLOUDINARY_UPLOAD_PRESET
     })
 })
 
-router.post('/create', async function(req, res) {
+router.post('/create', checkIfAuthenticated, async function(req, res) {
     // Read in all the categories
     const allCategories = await Category.fetchAll().map((category) => {
         return [category.get('id'), category.get('name')];

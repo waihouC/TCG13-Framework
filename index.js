@@ -4,6 +4,8 @@ const wax = require('wax-on')
 require('dotenv').config();
 const session = require('express-session');
 const flash = require('connect-flash');
+const FileStore = require('session-file-store')(session);
+const csrf = require('csurf');
 
 // create express app
 let app = express();
@@ -27,6 +29,7 @@ app.use(
 
 // setup session
 app.use(session({
+    'store': new FileStore(),
     'secret': 'keyboard cat',
     'resave': false,
     'saveUninitialized': true
@@ -41,6 +44,21 @@ app.use(function(req, res, next){
     res.locals.success_messages = req.flash('success_messages');
     res.locals.error_messages = req.flash('error_messages');
     next();
+});
+
+// enable protection from csrf
+app.use(csrf());
+
+// middleware to inject csrf token into all hbs files
+app.use(function(req, res, next){
+    res.locals.csrfToken = req.csrfToken();
+    next();
+});
+
+// share user data with all hbs files
+app.use(function(req, res, next) {
+    res.locals.user = req.session.user;
+    next(); // call the next middleware or route if no middleware
 });
 
 const landingRoutes = require('./routes/landing')
