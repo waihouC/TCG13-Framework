@@ -105,9 +105,44 @@ const createLoginForm = () => {
     })
 }
 
+const createSearchForm = (categories, tags) => {
+    return forms.create({
+        // <input type="text" name="productName">
+        "name": fields.string({
+            required: false,
+            // display error for field
+            errorAfterField: true
+        }),
+        "min_cost": fields.string({
+            required: false,
+            errorAfterField: true,
+            validators: [validators.integer(), validators.min(0)]
+        }),
+        "max_cost": fields.string({
+            required: false,
+            errorAfterField: true,
+            validators: [validators.integer(), validators.min(0)]
+        }),
+        "category_id": fields.string({
+            label:'Category',
+            required: false,
+            errorAfterField: true,
+            widget: widgets.select(), // indicate using <select><</select> to fill in the field
+            choices: categories
+        }),
+        "tags": fields.string({
+            required: false,
+            errorAfterField: true,
+            widget: widgets.multipleSelect(),
+            choices: tags
+        })
+    });
+}
+
 module.exports = { 
     createProductForm,
     createRegistrationForm,
     createLoginForm,
+    createSearchForm,
     bootstrapField
 };

@@ -19,7 +19,8 @@ exports.up = function(db) {
     "id": {
       "type":"int",
       "primaryKey": true,
-      "autoIncrement": true
+      "autoIncrement": true,
+      "unsigned": true
     },
     "name": {
       "type":"string",

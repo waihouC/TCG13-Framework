@@ -3,6 +3,12 @@
 {{#block "content"}}
 <h1>All Products</h1>
 <a href="/products/create" class="btn btn-primary">Create Product</a>
+
+<form method="GET">
+    {{{form}}}
+    <input type="submit" class="btn btn-primary my-3" value="Search" />
+</form>
+
 <table class="table">
     <thead>
         <tr>
@@ -12,6 +18,7 @@
             <th>Description</th>
             <th>Category</th>
             <th>Tags</th>
+            <th></th>
             <th></th>
         </tr>
     </thead>
@@ -39,6 +46,10 @@
                     {{/each}}
                 </td>
                 <td>
+                    <img src="{{this.image_url}}" class="img-fluid" />
+                </td>
+                <td>
+                    <a class="btn btn-primary btn-sm" href="/cart/{{this.id}}/add">Add to Cart</a>
                     <a class="btn btn-primary btn-sm" href="/products/{{this.id}}/update">Update</a>
                     <a class="btn btn-danger btn-sm" href="/products/{{this.id}}/delete">Delete</a>
                 </td>

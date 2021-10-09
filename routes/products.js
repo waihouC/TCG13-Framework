@@ -1,67 +1,147 @@
 const express = require('express');
 const router = express.Router();  // create a router object from express
-const { createProductForm, bootstrapField } = require('../forms');
+const { 
+    createProductForm,
+    bootstrapField,
+    createSearchForm 
+} = require('../forms');
 const { checkIfAuthenticated } = require('../middlewares');
 
 // import Product, Category, Tag models from models/index.js
-const { Product, Category, Tag } = require('../models');
+const { 
+    Product, 
+    Category, 
+    Tag 
+} = require('../models');
 
-async function getProductById(productId) {
-    // first arg: obj of settings 
-    // db.collection('products').find({'_id'})
-    let product = await Product.where({
-        'id': productId
-    }).fetch({
-        'required': true,
-        'withRelated': ['tags']
-    });
+// move to DAL
+// async function getProductById(productId) {
+//     // first arg: obj of settings 
+//     // db.collection('products').find({'_id'})
+//     let product = await Product.where({
+//         'id': productId
+//     }).fetch({
+//         'required': true,
+//         'withRelated': ['tags']
+//     });
 
-    return product;
-}
+//     return product;
+// }
 
-router.get('/', async function(req, res) {
-    // select * from products;
-    let products = await Product.collection().fetch({
-        withRelated:['category', 'tags'] // load in category and tags info
-    });
-    res.render('products/index', {
-        'products': products.toJSON()
-    });
+// import from DAL the repository functions
+// repository in this context does not refer to github
+// rather it's a generic term to refer to a function
+// that retrieves data from the database
+const {
+    getProductById, 
+    getAllCategories, 
+    getAllTags
+} = require('../dal/product.js')
+
+// router.get('/', async function(req, res) {
+//     // select * from products;
+//     let products = await Product.collection().fetch({
+//         withRelated:['category', 'tags'] // load in category and tags info
+//     });
+//     res.render('products/index', {
+//         'products': products.toJSON()
+//     });
+// })
+
+// search form included
+router.get('/', async function (req, res) {
+    // retrieve an array of all available categories
+    const allCategories = await getAllCategories();
+
+    // create a fake category that represents search all
+    allCategories.unshift([0, '----'])
+
+    // retrieve an array of all the tags
+    const allTags = await getAllTags();
+
+    let searchForm = createSearchForm(allCategories, allTags);
+
+    // create a base query which is deferred => select * from products;
+    let q = Product.collection();
+
+    searchForm.handle(req,{
+        'success': async function(form) {
+            if (form.data.name) {
+                q.where('name', 'like', '%' + form.data.name + '%');
+            }
+
+            if (form.data.min_cost) {
+                q.where('cost', '>=', form.data.min_cost);
+            }
+
+            if (form.data.max_cost) {
+                q.where('cost', '<=', form.data.max_cost);
+            }
+
+            if (form.data.category_id && form.data.category_id != "0") {
+                q.where('category_id', '=', form.data.category_id)
+            }
+
+            if (form.data.tags) {
+                q.query('join', 'products_tags', 'products.id', 'product_id')
+                .where('tag_id', 'in', form.data.tags.split(','))
+            }
+
+            let products = await q.fetch({
+                withRelated:['category', 'tags']
+            })
+
+            res.render('products/index', {
+                'products': products.toJSON(),
+                'form': form.toHTML(bootstrapField)
+            });
+        },
+        'error': async function(form) {
+            let products = await q.fetch({
+                withRelated:['category', 'tags']
+            });
+            res.render('products/index', {
+                'products': products.toJSON(),
+                'form': form.toHTML(bootstrapField)
+            });
+        },
+        'empty': async function(form) {
+            let products = await q.fetch({
+                withRelated:['category', 'tags']
+            });
+            res.render('products/index', {
+                'products': products.toJSON(),
+                'form': form.toHTML(bootstrapField)
+            });
+        }
+    })
 })
 
 router.get('/create', checkIfAuthenticated, async function(req, res) {
     // retrieve array of all categories
     // map to customise the array
-    const allCategories = await Category.fetchAll().map(function(category) {
-        return [ category.get('id'), category.get('name') ];
-    });
+    const allCategories = await getAllCategories();
     //console.log(await allCategories.toJSON());
 
     // fetch all tags
-    const allTags = await Tag.fetchAll().map(function(tag) {
-        return [tag.get('id'), tag.get('name')]
-    });
+    const allTags = await getAllTags();
 
     const productForm = createProductForm(allCategories, allTags);
 
     res.render('products/create', {
         'form': productForm.toHTML(bootstrapField),
-        cloudinaryName: process.env.CLOUDINARY_NAME,
-        cloudinaryApiKey: process.env.CLOUDINARY_API_KEY,
-        cloudinaryPreset: process.env.CLOUDINARY_UPLOAD_PRESET
+        'cloudinaryName': process.env.CLOUDINARY_NAME,
+        'cloudinaryApiKey': process.env.CLOUDINARY_API_KEY,
+        'cloudinaryPreset': process.env.CLOUDINARY_UPLOAD_PRESET
     })
 })
 
 router.post('/create', checkIfAuthenticated, async function(req, res) {
     // Read in all the categories
-    const allCategories = await Category.fetchAll().map((category) => {
-        return [category.get('id'), category.get('name')];
-    })
+    const allCategories = await getAllCategories();
 
     // fetch all tags
-    const allTags = await Tag.fetchAll().map(function(tag) {
-        return [tag.get('id'), tag.get('name')]
-    });
+    const allTags = await getAllTags();
 
     // set all categories in Product form
     const productForm = createProductForm(allCategories, allTags);
@@ -78,6 +158,7 @@ router.post('/create', checkIfAuthenticated, async function(req, res) {
             newProduct.set('cost', form.data.cost);
             newProduct.set('description', form.data.description);
             newProduct.set('category_id', form.data.category_id);
+            newProduct.set('image_url', form.data.image_url);
             
             // save new row to db
             await newProduct.save();
@@ -110,14 +191,10 @@ router.post('/create', checkIfAuthenticated, async function(req, res) {
 
 router.get('/:product_id/update', async function(req, res) {
     // fetch all the categories
-    const allCategories = await Category.fetchAll().map((category)=>{
-        return [category.get('id'), category.get('name')];
-    })
+    const allCategories = await getAllCategories();
 
     // fetch all tags
-    const allTags = await Tag.fetchAll().map(function(tag) {
-        return [tag.get('id'), tag.get('name')]
-    });
+    const allTags = await getAllTags();
     
     // fetch details of product to update
     let product = await getProductById(req.params.product_id);
@@ -129,6 +206,7 @@ router.get('/:product_id/update', async function(req, res) {
     productForm.fields.cost.value = product.get('cost');
     productForm.fields.description.value = product.get('description');
     productForm.fields.category_id.value = product.get('category_id');
+    productForm.fields.image_url.value = product.get('image_url');
 
     // fetch all the related tags of the product
     let selectedTags = await product.related('tags').pluck('id');
@@ -136,26 +214,22 @@ router.get('/:product_id/update', async function(req, res) {
 
     res.render('products/update', {
         'form': productForm.toHTML(bootstrapField),
-        'product': product.toJSON()
+        'product': product.toJSON(),
+        'cloudinaryName': process.env.CLOUDINARY_NAME,
+        'cloudinaryApiKey': process.env.CLOUDINARY_API_KEY,
+        'cloudinaryPreset': process.env.CLOUDINARY_UPLOAD_PRESET
     });
 })
 
 router.post('/:product_id/update', async function(req, res) {
     // fetch all the categories
-    const allCategories = await Category.fetchAll().map((category)=>{
-        return [category.get('id'), category.get('name')];
-    })
+    const allCategories = await getAllCategories();
 
-    // fetch all tags
-    const allTags = await Tag.fetchAll().map(function(tag) {
-        return [tag.get('id'), tag.get('name')]
-    });
-    
-    // fetch details of product to update
+    // fetch the product to update
     let product = await getProductById(req.params.product_id);
 
      // process the form
-     const productForm = createProductForm(allCategories, allTags);
+     const productForm = createProductForm(allCategories);
      productForm.handle(req, {
          'success': async function(form) {
              // can only use if form.data have exactly
@@ -203,7 +277,7 @@ router.post('/:product_id/delete', async function(req, res) {
     // fetch details of product to update
     let product = await getProductById(req.params.product_id);
     
-    // delete a row
+    // delete a row from table
     await product.destroy();
 
     res.redirect('/products');

@@ -1,6 +1,6 @@
-const express = require('express')
-const hbs = require('hbs')
-const wax = require('wax-on')
+const express = require('express');
+const hbs = require('hbs');
+const wax = require('wax-on');
 require('dotenv').config();
 const session = require('express-session');
 const flash = require('connect-flash');
@@ -30,7 +30,7 @@ app.use(
 // setup session
 app.use(session({
     'store': new FileStore(),
-    'secret': 'keyboard cat',
+    'secret': process.env.SESSION_SECRET_KEY,
     'resave': false,
     'saveUninitialized': true
 }));
@@ -61,14 +61,20 @@ app.use(function(req, res, next) {
     next(); // call the next middleware or route if no middleware
 });
 
-const landingRoutes = require('./routes/landing')
-const productRoutes = require('./routes/products')
-const userRoutes = require('./routes/users')
+const landingRoutes = require('./routes/landing');
+const productRoutes = require('./routes/products');
+const userRoutes = require('./routes/users');
+const cloudinaryRoutes = require('./routes/cloudinary');
+const cartRoutes = require('./routes/cart');
+const checkoutRoutes = require('./routes/checkout');
 
 async function main() {
     app.use('/', landingRoutes);
     app.use('/products', productRoutes);
     app.use('/users', userRoutes);
+    app.use('/cloudinary', cloudinaryRoutes);
+    app.use('/cart', cartRoutes);
+    app.use('/checkout', checkoutRoutes);
 }
 
 main();

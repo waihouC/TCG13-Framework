@@ -16,14 +16,14 @@ exports.setup = function(options, seedLink) {
 
 exports.up = function(db) {
   return db.createTable('tags', {
-    id: { 
+    'id': { 
       'type': 'int',
       'unsigned': true,
       'primaryKey': true,
       'notNull': true, 
       'autoIncrement': true
     },
-    name: { 
+    'name': { 
       'type': 'string', 
       'length': 100
     },

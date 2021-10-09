@@ -15,47 +15,47 @@ exports.setup = function(options, seedLink) {
 };
 
 exports.up = function(db) {
-  return db.createTable('products_tags', {
-    'id': { 
+  return db.createTable('cart_items', {
+    'id': {
       'type': 'int',
-      'unsigned': true, 
+      'unsigned': true,
       'primaryKey': true,
-      'notNull': true, 
       'autoIncrement': true
     },
-    // foreign key to products table
-    // TYPE and NULL properties must be the same as in products table
     'product_id': {
       'type': 'int',
       'unsigned': true,
       'notNull': true,
       'foreignKey': {
-        'name': 'products_tags_product_fk', // must be unique name
-        'table': 'products',
-        'mapping': 'id',
+        'name': 'cart_items_product_fk',
+        'table': 'products', // which table the foreign key is referring to
+        'mapping': 'id',     // which column in the table to map the foreign key to
         'rules': {
-            'onDelete': 'CASCADE' // if a product is ever deleted, then the corrosponding row in products_tags will be deleted as well
+          'onDelete': 'CASCADE',
+          'onUpdate': 'RESTRICT'
         }
       }
     },
-    'tag_id': {
+    'user_id': {
       'type': 'int',
       'unsigned': true,
       'notNull': true,
       'foreignKey': {
-        'name': 'products_tags_tag_fk',
-        'table': 'tags',
-        'mapping': 'id',
+        'name': 'cart_items_user_fk',
+        'table': 'users',
+        'mapping': 'id', 
         'rules': {
-            'onDelete': 'CASCADE'
+          'onDelete': 'CASCADE',
+          'onUpdate': 'RESTRICT'
         }
       }
-    }
+    },
+    'quantity': {'type':'int', 'unsigned': true}
   });
 };
 
 exports.down = function(db) {
-  return null;
+  return db.dropTable('cart_items');
 };
 
 exports._meta = {
