@@ -33,8 +33,14 @@ async function getAllTags() {
     return allTags;
 }
 
+// get all products
+async function getAllProducts() {
+    return await Product.fetchAll();
+}
+
 module.exports = {
     getProductById,
     getAllCategories,
-    getAllTags
+    getAllTags,
+    getAllProducts
 }
