@@ -3,7 +3,7 @@ const CartServices = require('../services/CartServices');
 const router = express.Router();
 
 const Stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
-const bodyParser = require('body-parser');
+const bodyParser = require('body-parser'); // needed to extract information from Stripe sends a request to our webhook
 
 router.get('/', async function(req, res) {
     // in stripe - a payment object represents one transaction

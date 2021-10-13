@@ -6,7 +6,7 @@ const session = require('express-session');
 const flash = require('connect-flash');
 const FileStore = require('session-file-store')(session);
 const csrf = require('csurf');
-const bodyParser = require('body-parser'); // needed to extract information from Stripe sends a request to our webhook
+const cors = require('cors');
 
 // create express app
 let app = express();
@@ -27,6 +27,9 @@ app.use(
       extended: false
     })
 );
+
+// cors must be enabled before session
+app.use(cors());
 
 // setup session
 app.use(session({
