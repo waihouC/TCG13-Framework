@@ -225,11 +225,14 @@ router.post('/:product_id/update', async function(req, res) {
     // fetch all the categories
     const allCategories = await getAllCategories();
 
+    // fetch all tags
+    const allTags = await getAllTags();
+
     // fetch the product to update
     let product = await getProductById(req.params.product_id);
 
      // process the form
-     const productForm = createProductForm(allCategories);
+     const productForm = createProductForm(allCategories, allTags);
      productForm.handle(req, {
          'success': async function(form) {
              // can only use if form.data have exactly
