@@ -35,8 +35,8 @@ router.get('/', async function(req, res) {
 
         // add in the id of the product and the quantity
         meta.push({
-            'product_id': item.get(item.product_id),
-            'quantity': item.get(item.quantity)
+            'product_id': item.get('product_id'),
+            'quantity': item.get('quantity')
         })
     }
 
